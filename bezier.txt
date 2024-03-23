@@ -1,0 +1,89 @@
+#include <GL/glut.h>
+#include <iostream>
+#include <bits/stdc++.h>
+
+#define SCR_HT 480
+using namespace std;
+vector<pair<int,int> > points;
+int pointno=0;
+static void display(void)
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(0,0,1);
+    //glPointSize(5.0);
+    //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    glBegin(GL_LINES);
+        glVertex2f(0,0);
+        glVertex2f(130.0,0);
+
+    glEnd();
+    glFlush();
+}
+void beizer_curve_draw()
+{
+    int x0=points[points.size()-4].first;
+    int y0=points[points.size()-4].second;
+    int x1=points[points.size()-3].first;
+    int y1=points[points.size()-3].second;
+    int x2=points[points.size()-2].first;
+    int y2=points[points.size()-2].second;
+    int x3=points[points.size()-1].first;
+    int y3=points[points.size()-1].second;
+    int xp,yp;
+    float t=0;
+    while (t<=1)
+    {
+        xp=(x0*pow(1-t,3))+(3*x1*t*pow(1-t,2))+(3*x2*pow(t,2)*(1-t))+(x3*pow(t,3));
+        yp=(y0*pow(1-t,3))+(3*y1*t*pow(1-t,2))+(3*y2*pow(t,2)*(1-t))+(y3*pow(t,3));
+        glColor3f(0,0,0);
+        glPointSize(1.0);
+        glBegin(GL_POINTS);
+            glVertex2d(xp,yp);
+        glEnd();
+        glFlush();
+        t+=0.001;
+    }
+}
+void mouse_handling_function_name(int button,int state,int x,int y)
+{
+    if (button==GLUT_LEFT && state==GLUT_DOWN)
+    {
+        y=SCR_HT - y;
+        pointno++;
+        cout<<"("<<x<<","<<y<<")"<<endl;
+        points.push_back(make_pair(x,y));
+        glPointSize(2.0);
+        glColor3f(0.04,0.35,0.23);
+        glBegin(GL_POINTS);
+            glVertex2f(x,y);
+        glEnd();
+        glFlush();
+    }
+    else if (button==GLUT_RIGHT_BUTTON && state==GLUT_DOWN)
+    {
+        beizer_curve_draw();
+    }
+}
+void init()
+{
+    glClearColor(1,1,1,1);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0,640,0,480);
+}
+int main(int argc, char *argv[])
+{
+    glutInit(&argc, argv);
+    glutInitWindowSize(640,480);
+    glutInitWindowPosition(10,10);
+    glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
+    //GLUT_DOUBLE | GLUT_DEPTH for 3d, for 2d only glut_single is enough
+    glutCreateWindow("GLUT Beizer");
+    glutDisplayFunc(display);
+    init();
+    glutMouseFunc(mouse_handling_function_name);
+
+    glutMainLoop();
+
+    return EXIT_SUCCESS;
+}

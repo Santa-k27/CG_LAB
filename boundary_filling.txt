@@ -1,0 +1,120 @@
+#include <GL/glut.h>
+#include <iostream>
+#include <vector>
+#include <cmath>
+#define SCR_HT 480
+using namespace std;
+vector<pair<int,int> > points;
+int pointno=0;
+class color
+{
+    public:
+        float r,g,b;
+        color():r(0),g(0),b(0){};
+        color(float R,float G,float B) :r(R), g(G), b(B){};
+};
+static void display(void)
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(0,0,1);
+    //glPointSize(5.0);
+    //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    glBegin(GL_LINES);
+        glVertex2f(0,0);
+        glVertex2f(130.0,0);
+
+    glEnd();
+    glFlush();
+}
+void draw_polygon()
+{
+    glColor3f(0,0,0);
+    //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    //glPointSize(2.0);
+    glBegin(GL_LINE_LOOP);
+    for (unsigned int i = 0 ;i < points.size();i++)
+    {
+        glVertex2f(points[i] .first , points[i] .second );
+    }
+    glEnd();
+    glFlush();
+    points.clear();
+}
+void mouse_handling_function_name(int button,int state,int x,int y)
+{
+    if (button==GLUT_RIGHT_BUTTON && state==GLUT_DOWN)
+    {
+        y=SCR_HT - y;
+        pointno++;    
+        cout<<"("<<x<<","<<y<<")"<<endl;
+        points.push_back(make_pair(x,y));
+        //glPointSize(5.0);
+        glColor3f(0,1,0);
+        glBegin(GL_POINTS);
+            glVertex2f(x,y);
+        glEnd();
+        glFlush();
+    }
+}
+int ctr=0;
+void colorfilling(int x,int y,color fillcolor,color bordercolor,int val)
+{
+    float curr[3];
+    glReadPixels(x,y,1,1,GL_RGB,GL_FLOAT,curr);
+    cout<<"("<<x<<","<<y<<","<<val<<")"<<endl;
+    //curr.r=static_cast<float>(pixelcolor[0]),curr.g=static_cast<float>(pixelcolor[1]),curr.b=static_cast<float>(pixelcolor[2]);
+    if ( (curr[0]!=fillcolor.r || curr[1]!=fillcolor.b || curr[2]!=fillcolor.g) && 
+         (curr[0]!=bordercolor.r || curr[1]!=bordercolor.b || curr[2]!=bordercolor.g))
+    {
+        cout << "Inside if condition" << val;
+        glColor3f(fillcolor.r,fillcolor.g,fillcolor.b);
+        glBegin(GL_POINTS);
+            glVertex2f(x,y);
+        glEnd();
+        glFlush();
+        colorfilling(x+1,y,fillcolor,bordercolor,1);
+        colorfilling(x-1,y,fillcolor,bordercolor,2);
+        colorfilling(x,y+1,fillcolor,bordercolor,3);
+        colorfilling(x,y-1,fillcolor,bordercolor,4);
+    }
+    
+}   
+void keyboard_func(unsigned char key, int x, int y)
+{
+    if (key == 'c' ||  key == 'C')
+    {
+        cout<<"c key pressed"<<endl;
+        int x = points[points.size()-1].first;
+        int y = points[points.size()-1].second;
+        color fillcolor=color(1,0,0);
+        color bordercolor=color(0,0,0);
+        colorfilling(x,y,fillcolor,bordercolor,0);
+    }
+    else if (key == 'p' || key == 'P')
+    {
+        draw_polygon();
+    }
+}
+void init()
+{
+    glClearColor(1,1,1,1);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0,640,0,480);
+}
+int main(int argc, char *argv[])
+{
+    glutInit(&argc, argv);
+    glutInitWindowSize(640,480);
+    glutInitWindowPosition(10,10);
+    glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
+    //GLUT_DOUBLE | GLUT_DEPTH for 3d, for 2d only glut_single is enough
+    glutCreateWindow("GLUT boundary fill");
+    glutDisplayFunc(display);
+    init();
+    glutMouseFunc(mouse_handling_function_name);
+    glutKeyboardFunc(keyboard_func);
+    glutMainLoop();
+
+    return EXIT_SUCCESS;
+}
